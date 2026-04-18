@@ -4,12 +4,16 @@ from pathlib import Path
 from typing import List
 
 from groq import Groq
-
+from pathlib import Path
 from image_describer import describe_image
-
+import os
 
 DEFAULT_TEXT_MODEL = "llama-3.3-70b-versatile"
 
+if os.name == "nt":  # Windows
+    FFMPEG_PATH = "ffmpeg"
+else:  # Linux (Streamlit Cloud)
+    FFMPEG_PATH = str(Path(__file__).parent / "ffmpeg")
 
 def summarize_frame_descriptions(
     frame_descriptions: List[str],
@@ -43,7 +47,7 @@ def extract_video_frames(video_path: Path, max_frames: int = 4, interval_seconds
     frame_pattern = frames_dir / "frame_%03d.jpg"
 
     cmd = [
-        "ffmpeg",
+        FFMPEG_PATH,
         "-y",
         "-i",
         str(video_path),
