@@ -1,10 +1,10 @@
 import subprocess
 import tempfile
+import shutil
 from pathlib import Path
 from typing import List
 
 from groq import Groq
-from pathlib import Path
 from image_describer import describe_image
 import os
 
@@ -12,8 +12,20 @@ DEFAULT_TEXT_MODEL = "llama-3.3-70b-versatile"
 
 if os.name == "nt":  # Windows
     FFMPEG_PATH = "ffmpeg"
-else:  # Linux (Streamlit Cloud)
-    FFMPEG_PATH = str(Path(__file__).parent / "ffmpeg")
+else:  # Linux / Streamlit Cloud (mount is read-only — copy binary to writable /tmp)
+    _src = Path(__file__).parent / "ffmpeg"
+    _dst = Path(tempfile.gettempdir()) / "ffmpeg_exec"
+
+    if not _dst.exists():
+        shutil.copy2(_src, _dst)
+
+    try:
+        os.chmod(_dst, 0o755)
+    except Exception:
+        pass
+
+    FFMPEG_PATH = str(_dst)
+
 
 def summarize_frame_descriptions(
     frame_descriptions: List[str],
